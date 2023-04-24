@@ -3,116 +3,141 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hugo <hugo@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: hubrygo <hubrygo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 16:39:50 by hubrygo           #+#    #+#             */
-/*   Updated: 2023/04/21 13:30:47 by hugo             ###   ########.fr       */
+/*   Updated: 2023/04/24 18:20:56 by hubrygo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>
 #include "get_next_line.h"
+#include <stdio.h>
 
-void	ft_putchar(char c)
+size_t	ft_strlen(char *str)
 {
-	write(1, &c, 1);
-}
-
-int	ft_is_next_line(char *buff)
-{
-	int	i;
-
-	i = 0;
-	while (i < BUFFER_SIZE)
-	{
-		if (buff[i] == '\n')
-		{
-			write(1, &buff[i], 1);
-			i++;
-			return (i);
-		}
-		ft_putchar(buff[i]);
-		i++;
-	}
-	return (i);
-}
-
-int ft_strlen(char *str)
-{
-	int	i;
+	size_t	i;
 
 	if (!str)
 		return (0);
 	i = 0;
-	while (str[i] <= 126 && str[i] >= 32)
+	while (str[i])
 		i++;
 	return (i);
 }
 
-int	ft_isprint(int c)
+char	*ft_strjoin(char *s1, char *s2)
 {
-	if (c <= 126 && c >= 32)
-		return (1);
+	size_t	i;
+	size_t	j;
+	char	*str;
+
+	i = -1;
+	j = -1;
+	str = malloc(sizeof(char) * (ft_strlen(s1) + ft_strlen(s2) + 1));
+	if (!str)
+		return (NULL);
+	while (++i < ft_strlen(s1))
+		str[i] = s1[i];
+	while (++j < ft_strlen(s2))
+		str[i + j] = s2[j];
+	str[i + j] = '\0';
+	return (str);
+}
+
+int	ft_is_new_line(char *str)
+{
+	int	i;
+
+	i = 0;
+	while (str[i])
+	{
+		if (str[i] == '\n')
+			return (1);
+		i++;
+	}
 	return (0);
+}
+
+char	*ft_start(char *s)
+{
+	char	*dest;
+	int		i;
+	int		len;
+
+	i = 0;
+	len = ft_strlen(s);
+	dest = malloc(sizeof(*dest) * (len + 1));
+	if (!dest)
+		return (0);
+	while (s[i] && s[i] != '\n')
+	{
+		dest[i] = s[i];
+		i++;
+	}
+	dest[i] = '\0';
+	return (dest);
+}
+
+char	*ft_end(char *str)
+{
+	int		i;
+	int		j;
+	char	*ret;
+
+	if (!str)
+		return (NULL);
+	i = 0;
+	j = 0;
+	while (str[i] && str[i] != '\n')
+		i++;
+	if (str[i] == '\n')
+		i++;
+	ret = malloc(sizeof(char) * (ft_strlen(str + i) + 1));
+	while (str[i + j])
+	{
+		ret[j] = str[i + j];
+		j++;
+	}
+	ret[j] = '\0';
+	free(str);
+	return (ret);
 }
 
 char	*get_next_line(int fd)
 {
-	int			line;
-	static char	*buff;
-	int			len;
+	static char *stack = 0;
 	int			i;
+	char		*temp;
+	char		*ret;
+	char		buff[BUFFER_SIZE + 1];
 
-	len = 1;
-	while (len != 0)
+	i = read(fd, buff, BUFFER_SIZE);
+	if (i == 0)
 	{
-		if (buff)
-		{
-			len = ft_strlen(buff);
-			// printf("\nPas vide: [%d]", ft_strlen(buff));
-			// printf("[%s]\n", buff);
-		}
-		else
-		{
-			// printf("\nVide:     [%d]", ft_strlen(buff));
-			// printf("[%s]\n", buff);
-			len = 0;
-			buff = NULL;
-		}
-		if (len != 0)
-		{
-			i = 0;
-			while (buff[i] != '\n')
-			{
-				// printf("[%c]", buff[i]);
-				// write(1, "[", 1);
-				// write(1, &buff[i], 1);
-				// write(1, "]", 1);
-				i++;
-			}
-			// printf("nombre passe: %d\n", i);
-			buff += i + 1;
-			// printf("Reste: %d\n", ft_strlen(buff));
-			i = 0;
-			while (buff[i] && i < BUFFER_SIZE && buff[i] != '\n' && ft_isprint(buff[i]))
-			{
-				ft_putchar(buff[i]);
-				i++;
-			}
-		}
+		temp = ft_end(stack);
+		stack = NULL;
+		return (temp);
 	}
-	buff = malloc (sizeof(char *) * BUFFER_SIZE);
-	if (fd == -1 || !buff)
-		return (NULL);
-	line = read(fd, buff, BUFFER_SIZE - len);
-	if (!line)
-		return (NULL);
-	if (ft_is_next_line(buff) >= BUFFER_SIZE)
+	buff[i] = '\0';
+	while (i != 0)
 	{
-		buff += ft_is_next_line(buff);
-	 	return (NULL);
+		temp = stack;
+		stack = ft_strjoin(temp, buff);
+		free(temp);
+		if (ft_is_new_line(buff) == 1)
+			break;
+		i = read(fd, buff, BUFFER_SIZE);
+		if (i == 0)
+		{
+			temp = ft_start(stack);
+			stack = NULL;
+			return (temp);
+		}
+		buff[i] = '\0';
 	}
-	return (buff);
+	ret = ft_start(stack);
+	stack = ft_end(stack);
+	return (ret);
 }
 
 int main()
@@ -122,7 +147,9 @@ int main()
 
 	i = -1;
 	fd = open("test.txt", O_RDONLY);
-	while (++i < 4)
-		get_next_line(fd);
+	while (++i < 10)
+		printf("%s\n", get_next_line(fd));
+	// get_next_line(fd);
 	close(fd);
+	//system("leaks a.out");
 }

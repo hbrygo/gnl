@@ -2,11 +2,13 @@
 # define GET_NEXT_LINE_H
 
 #ifndef BUFFER_SIZE
-int BUFFER_SIZE = 10;
+int BUFFER_SIZE = 2;
 #endif
 
 # include <unistd.h>
 # include <fcntl.h>
 # include <stdlib.h>
+
+char	*get_next_line(int fd);
 
 #endif
