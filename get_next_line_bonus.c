@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*   get_next_line_bonus.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: hubrygo <hubrygo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/20 16:39:50 by hubrygo           #+#    #+#             */
-/*   Updated: 2023/04/25 17:58:53 by hubrygo          ###   ########.fr       */
+/*   Updated: 2023/04/25 18:00:04 by hubrygo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "get_next_line.h"
+#include "get_next_line_bonus.h"
 
 char	*ft_strjoin(char *s1, char *s2)
 {
@@ -103,17 +103,17 @@ char	*get_next_line(int fd)
 	static char	*stack = 0;
 	int			i;
 	char		*ret;
-	char		buff[BUFFER_SIZE + 1];
+	char		buff[OPEN_MAX][BUFFER_SIZE + 1];
 
 	while (ft_is_new_line(stack) == 0)
 	{
-		i = read(fd, buff, BUFFER_SIZE);
+		i = read(fd, buff[fd], BUFFER_SIZE);
 		if (i == -1)
 			return (ft_set_stack(&stack));
 		if (i == 0)
 			break ;
-		buff[i] = '\0';
-		stack = ft_join(stack, &ret, buff);
+		buff[fd][i] = '\0';
+		stack = ft_join(stack, &ret, buff[fd]);
 		if (!stack)
 			return (NULL);
 		free(ret);
